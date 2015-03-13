@@ -2,7 +2,7 @@ FROM centos:7
 MAINTAINER Alfred Shen <alfredcs@yahoo.com>
 ENV container docker
 # -----------------------------------------------------------------------------
-# Base Install
+# Additioanl rpm installation
 # -----------------------------------------------------------------------------
 RUN yum -y swap -- remove fakesystemd -- install systemd systemd-libs
 RUN yum -y update; yum clean all; \
@@ -28,10 +28,7 @@ RUN yum -y install \
 	&& rm -rf /var/cache/yum/* \
 	&& yum clean all
 # -----------------------------------------------------------------------------
-# Install supervisord (required to run more than a single process in a container)
-# Note: EPEL package lacks /usr/bin/pidproxy
-# We require supervisor-stdout to allow output of services started by
-# supervisord to be easily inspected with "docker logs".
+# Generate ssh host keys for sshd
 # -----------------------------------------------------------------------------
 RUN sed -i 's/^# %wheel\tALL=(ALL)\tALL/%wheel\tALL=(ALL)\tALL/g' /etc/sudoers
 
@@ -47,7 +44,11 @@ RUN rm -f /etc/ssh/ssh_host_ecdsa_key /etc/ssh/ssh_host_rsa_key && \
 # UTC Timezone & Networking
 # -----------------------------------------------------------------------------
 RUN ln -sf /usr/share/zoneinfo/UTC /etc/localtime \
-&& echo "NETWORKING=yes" > /etc/sysconfig/network
+	&& echo "NETWORKING=yes" > /etc/sysconfig/network
+
+# -----------------------------------------------------------------------------
+# Post installation/configuration updates
+# -----------------------------------------------------------------------------
 VOLUME [ "/sys/fs/cgroup" ]
 ADD set_root_pw.sh /set_root_pw.sh
 ADD run.sh /run.sh
